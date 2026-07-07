@@ -157,6 +157,46 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
+-- AUTOMATIC AUTH CONFIRMATION: BEFORE INSERT on auth.users
+CREATE OR REPLACE FUNCTION public.handle_before_auth_user()
+RETURNS trigger AS $$
+BEGIN
+  -- Auto-verify email
+  new.email_confirmed_at := COALESCE(new.email_confirmed_at, NOW());
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER on_auth_user_before_insert
+  BEFORE INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_before_auth_user();
+
+-- AUTOMATIC IDENTITY SYNC: AFTER INSERT on auth.users (to allow immediate password login)
+CREATE OR REPLACE FUNCTION public.handle_after_auth_user_identity()
+RETURNS trigger AS $$
+BEGIN
+  -- Only insert if it doesn't exist
+  IF NOT EXISTS (SELECT 1 FROM auth.identities WHERE user_id = new.id) THEN
+    INSERT INTO auth.identities (id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+    VALUES (
+      new.id::text,
+      new.id,
+      jsonb_build_object('sub', new.id, 'email', new.email, 'email_verified', true),
+      'email',
+      NOW(),
+      NOW(),
+      NOW()
+    );
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER on_auth_user_after_insert_identity
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_after_auth_user_identity();
+
+
 -- Enable Row Level Security
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.farmer_profiles ENABLE ROW LEVEL SECURITY;

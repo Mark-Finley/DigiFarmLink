@@ -275,3 +275,19 @@ BEGIN
   END LOOP;
 END;
 $$;
+
+-- 5. SEED AUTH IDENTITIES
+-- Automatically matches identities text ID provider details to allow direct password sign-in
+INSERT INTO auth.identities (id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+SELECT 
+  id::text, 
+  id, 
+  jsonb_build_object('sub', id, 'email', email, 'email_verified', true), 
+  'email', 
+  NOW(), 
+  NOW(), 
+  NOW()
+FROM auth.users
+WHERE email LIKE '%@farmlink.com'
+ON CONFLICT (provider, id) DO NOTHING;
+
