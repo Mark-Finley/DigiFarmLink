@@ -18,12 +18,12 @@ const coordinatesMap: Record<string, { lat: number; lon: number }> = {
 const categoryImages: Record<string, string> = {
   Tomatoes: "https://images.unsplash.com/photo-1595855759920-86582396756a?w=400&q=80",
   Pepper: "https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=400&q=80",
-  "Garden Eggs": "https://images.unsplash.com/photo-1590377486603-51829e160e1d?w=400&q=80",
-  Okra: "https://images.unsplash.com/photo-1623910393282-3db53fb16eb0?w=400&q=80",
+  "Garden Eggs": "https://images.unsplash.com/photo-1528825871115-3581a5387919?w=400&q=80",
+  Okra: "https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=400&q=80",
   Cabbage: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&q=80",
-  Lettuce: "https://images.unsplash.com/photo-1622484211148-71700ccf0857?w=400&q=80",
+  Lettuce: "https://images.unsplash.com/photo-1556801712-76c8eb07bbc9?w=400&q=80",
   Spinach: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&q=80",
-  Onions: "https://images.unsplash.com/photo-1508747703725-719ae25db29f?w=400&q=80",
+  Onions: "https://images.unsplash.com/photo-1620188467120-5042ed1eb5da?w=400&q=80",
 };
 
 export async function createProduceAction(formData: FormData) {
