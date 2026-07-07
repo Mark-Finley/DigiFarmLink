@@ -52,3 +52,37 @@ export const createServerSideClient = async () => {
     }
   );
 };
+
+// Admin-specific Server-side Supabase client (using Service Role Key to bypass RLS and perform admin auth tasks)
+export const createAdminServiceSideClient = async () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const serviceKey =
+    process.env.SUPABASE_SECRET_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !serviceKey) {
+    throw new Error(
+      "Supabase configuration is missing. Please define SUPABASE_URL and SUPABASE_SECRET_KEY in your .env.local file."
+    );
+  }
+
+  const cookieStore = await cookies();
+
+  return createServerClient(url, serviceKey, {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet: { name: string; value: string; options: any }[]) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // Ignore cookie setting errors
+          }
+        },
+      },
+    }
+  );
+};

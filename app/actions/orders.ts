@@ -141,3 +141,112 @@ export async function checkoutAction(items: CheckoutItem[]) {
     return { success: false, error: err.message || "An unexpected error occurred during checkout." };
   }
 }
+
+export async function confirmOrderDeliveryAction(orderId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createServerSideClient();
+
+    // 1. Get logged-in user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, error: "Unauthorized. Please sign in." };
+    }
+
+    // 2. Fetch order to verify ownership
+    const { data: order, error: fetchError } = await supabase
+      .from("orders")
+      .select("buyer_id, farmer_id, total_price")
+      .eq("id", orderId)
+      .single();
+
+    if (fetchError || !order) {
+      return { success: false, error: "Order not found." };
+    }
+
+    if (order.buyer_id !== user.id) {
+      return { success: false, error: "Unauthorized. Only the buyer who placed the order can confirm delivery." };
+    }
+
+    // 3. Update order status to completed
+    const { error: updateError } = await supabase
+      .from("orders")
+      .update({ status: "completed", updated_at: new Date().toISOString() })
+      .eq("id", orderId);
+
+    if (updateError) {
+      return { success: false, error: `Failed to confirm delivery: ${updateError.message}` };
+    }
+
+    // 4. Send notification to the farmer
+    await supabase.from("notifications").insert({
+      user_id: order.farmer_id,
+      title: "Order Completed & Payout Finalized!",
+      message: `The buyer has confirmed receipt of order ${orderId.slice(0, 8)}. Payout of ${parseFloat(order.total_price as any).toFixed(2)} GHS is now finalized.`,
+    });
+
+    revalidatePath("/dashboard/buyer");
+    revalidatePath("/dashboard/farmer");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message || "An unexpected error occurred." };
+  }
+}
+
+export async function submitReviewAction(
+  orderId: string,
+  rating: number,
+  comment: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createServerSideClient();
+
+    // 1. Get logged-in user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, error: "Unauthorized. Please sign in." };
+    }
+
+    // 2. Fetch order to verify ownership
+    const { data: order, error: fetchError } = await supabase
+      .from("orders")
+      .select("buyer_id, farmer_id")
+      .eq("id", orderId)
+      .single();
+
+    if (fetchError || !order) {
+      return { success: false, error: "Order not found." };
+    }
+
+    if (order.buyer_id !== user.id) {
+      return { success: false, error: "Unauthorized. Only the buyer who placed the order can review it." };
+    }
+
+    // 3. Insert review
+    const { error: reviewError } = await supabase
+      .from("reviews")
+      .insert({
+        order_id: orderId,
+        reviewer_id: user.id,
+        reviewed_user_id: order.farmer_id,
+        rating,
+        comment,
+      });
+
+    if (reviewError) {
+      return { success: false, error: `Failed to submit review: ${reviewError.message}` };
+    }
+
+    // 4. Send notification to the farmer
+    await supabase.from("notifications").insert({
+      user_id: order.farmer_id,
+      title: "You Received a New Review!",
+      message: `A buyer left you a ${rating}-star review for order ${orderId.slice(0, 8)}.`,
+    });
+
+    revalidatePath("/dashboard/buyer");
+    revalidatePath("/dashboard/farmer");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message || "An unexpected error occurred." };
+  }
+}

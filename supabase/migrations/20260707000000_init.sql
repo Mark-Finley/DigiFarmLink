@@ -177,8 +177,9 @@ RETURNS trigger AS $$
 BEGIN
   -- Only insert if it doesn't exist
   IF NOT EXISTS (SELECT 1 FROM auth.identities WHERE user_id = new.id) THEN
-    INSERT INTO auth.identities (id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+    INSERT INTO auth.identities (id, provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
     VALUES (
+      gen_random_uuid(),
       new.id::text,
       new.id,
       jsonb_build_object('sub', new.id, 'email', new.email, 'email_verified', true),

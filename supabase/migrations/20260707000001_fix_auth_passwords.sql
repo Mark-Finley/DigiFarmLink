@@ -7,8 +7,9 @@ SET encrypted_password = '$2a$10$LT7r0U/tE6wYvJ/29XpBme.cO2106nI4wJ9R1Z1P1YfO7oT
 WHERE email LIKE '%@farmlink.com';
 
 -- 2. Ensure all seeded users have a valid auth.identities record to allow password sign-in
-INSERT INTO auth.identities (id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+INSERT INTO auth.identities (id, provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
 SELECT 
+  gen_random_uuid(),
   id::text, 
   id, 
   jsonb_build_object('sub', id, 'email', email, 'email_verified', true), 
@@ -18,4 +19,4 @@ SELECT
   NOW()
 FROM auth.users
 WHERE email LIKE '%@farmlink.com'
-ON CONFLICT (provider, id) DO NOTHING;
+ON CONFLICT (provider, provider_id) DO NOTHING;

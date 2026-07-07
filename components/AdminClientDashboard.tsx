@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from "react";
 import AdminAnalytics from "@/components/AdminAnalytics";
-import { deleteProduceAdminAction, suspendUserAdminAction } from "@/app/actions/admin";
-import { ShieldAlert, Users, Sprout, Landmark, ClipboardList, TrendingUp, AlertTriangle, UserCheck, Clock, Trash2, ShieldX, Eye } from "lucide-react";
+import { deleteProduceAdminAction, suspendUserAdminAction, updateUserAdminAction } from "@/app/actions/admin";
+import { ShieldAlert, Users, Sprout, Landmark, ClipboardList, TrendingUp, AlertTriangle, UserCheck, Clock, Trash2, ShieldX, Eye, Edit } from "lucide-react";
 import Link from "next/link";
 
 interface DashboardProps {
@@ -35,6 +35,51 @@ export default function AdminClientDashboard({
 }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<"overview" | "users" | "listings" | "orders" | "logs">("overview");
   const [isPending, startTransition] = useTransition();
+
+  const [editingUser, setEditingUser] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({
+    email: "",
+    role: "",
+    fullName: "",
+    phoneNumber: "",
+    locationName: "",
+    password: "",
+  });
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editSuccess, setEditSuccess] = useState<boolean>(false);
+
+  const handleStartEdit = (user: any) => {
+    setEditingUser(user);
+    setEditForm({
+      email: user.email || "",
+      role: user.role || "buyer",
+      fullName: user.full_name || "",
+      phoneNumber: user.phone_number || "",
+      locationName: user.location_name || "Kumasi Central",
+      password: "",
+    });
+    setEditError(null);
+    setEditSuccess(false);
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    setEditError(null);
+    setEditSuccess(false);
+
+    startTransition(async () => {
+      const result = await updateUserAdminAction(editingUser.id, editForm);
+      if (!result.success) {
+        setEditError(result.error || "Failed to update user.");
+      } else {
+        setEditSuccess(true);
+        setTimeout(() => {
+          setEditingUser(null);
+        }, 1000);
+      }
+    });
+  };
 
   const handleSuspend = (userId: string) => {
     startTransition(async () => {
@@ -190,13 +235,22 @@ export default function AdminClientDashboard({
                         <td className="p-3 capitalize">{u.role}</td>
                         <td className="p-3">{u.location_name || "Ashanti Corridor"}</td>
                         <td className="p-3 text-right">
-                          <button
-                            onClick={() => handleSuspend(u.id)}
-                            className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg hover:bg-amber-100 transition-colors inline-flex items-center gap-1"
-                          >
-                            <ShieldX className="h-3 w-3" />
-                            <span>Suspend</span>
-                          </button>
+                          <div className="flex justify-end items-center gap-2">
+                            <button
+                              onClick={() => handleStartEdit(u)}
+                              className="text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-lg hover:bg-primary/20 transition-colors inline-flex items-center gap-1"
+                            >
+                              <Edit className="h-3 w-3" />
+                              <span>Edit</span>
+                            </button>
+                            <button
+                              onClick={() => handleSuspend(u.id)}
+                              className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg hover:bg-amber-100 transition-colors inline-flex items-center gap-1"
+                            >
+                              <ShieldX className="h-3 w-3" />
+                              <span>Suspend</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -344,6 +398,158 @@ export default function AdminClientDashboard({
       <footer className="border-t bg-card py-6 text-center text-xs text-muted-foreground mt-12">
         <p>&copy; {new Date().getFullYear()} DigiFarmLink Ghana. Admin Dashboard Portal.</p>
       </footer>
+
+      {/* Edit User Modal */}
+      {editingUser && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card w-full max-w-md rounded-2xl border shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="border-b px-6 py-4 flex items-center justify-between bg-slate-50">
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-sm uppercase tracking-wider">
+                  Edit User Account
+                </h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5 font-mono">
+                  ID: {editingUser.id}
+                </p>
+              </div>
+              <button
+                onClick={() => setEditingUser(null)}
+                className="text-muted-foreground hover:text-foreground text-lg font-bold"
+              >
+                &times;
+              </button>
+            </div>
+            
+            <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
+              {editError && (
+                <div className="bg-destructive/10 border border-destructive/20 text-destructive text-xs p-3 rounded-lg font-semibold">
+                  {editError}
+                </div>
+              )}
+              {editSuccess && (
+                <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs p-3 rounded-lg font-semibold">
+                  User updated successfully!
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600" htmlFor="edit-name">
+                  Full Name
+                </label>
+                <input
+                  id="edit-name"
+                  type="text"
+                  required
+                  value={editForm.fullName}
+                  onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+                  className="w-full border rounded-lg px-3 py-2 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600" htmlFor="edit-email">
+                  Email Address
+                </label>
+                <input
+                  id="edit-email"
+                  type="email"
+                  required
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  className="w-full border rounded-lg px-3 py-2 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600" htmlFor="edit-role">
+                    Role
+                  </label>
+                  <select
+                    id="edit-role"
+                    required
+                    value={editForm.role}
+                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 capitalize"
+                  >
+                    <option value="farmer">Farmer</option>
+                    <option value="buyer">Buyer</option>
+                    <option value="transporter">Transporter</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600" htmlFor="edit-location">
+                    Hub Location
+                  </label>
+                  <select
+                    id="edit-location"
+                    required
+                    value={editForm.locationName}
+                    onChange={(e) => setEditForm({ ...editForm, locationName: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  >
+                    <option value="Kumasi Central">Kumasi Central</option>
+                    <option value="Mampong">Mampong</option>
+                    <option value="Obuasi">Obuasi</option>
+                    <option value="Ejura">Ejura</option>
+                    <option value="Konongo">Konongo</option>
+                    <option value="Bekwai">Bekwai</option>
+                    <option value="Offinso">Offinso</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600" htmlFor="edit-phone">
+                  Phone Number
+                </label>
+                <input
+                  id="edit-phone"
+                  type="text"
+                  required
+                  value={editForm.phoneNumber}
+                  onChange={(e) => setEditForm({ ...editForm, phoneNumber: e.target.value })}
+                  className="w-full border rounded-lg px-3 py-2 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600" htmlFor="edit-password">
+                  New Password (leave blank to keep current)
+                </label>
+                <input
+                  id="edit-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={editForm.password}
+                  onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                  className="w-full border rounded-lg px-3 py-2 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+
+              <div className="border-t pt-4 flex items-center justify-end gap-2 bg-slate-50 -mx-6 -mb-6 p-4">
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => setEditingUser(null)}
+                  className="px-4 py-2 border rounded-lg text-xs font-bold hover:bg-slate-100 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="px-4 py-2 bg-primary text-primary-foreground font-semibold rounded-lg text-xs hover:bg-primary/90 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  {isPending ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
