@@ -6,6 +6,7 @@ import { calculateDistance } from "@/utils/recommendation";
 import { Sprout, Star, MapPin, Tag, Calendar, ShoppingBag, ArrowLeft, Phone, ShieldCheck, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getProduceImageUrl } from "@/utils/images";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -103,7 +104,7 @@ export default async function ProduceDetailPage(props: PageProps) {
           {/* Left image display */}
           <div className="relative rounded-xl overflow-hidden border bg-muted/20">
             <img
-              src={item.image_url || "https://via.placeholder.com/600?text=Produce"}
+              src={getProduceImageUrl(item.category, item.image_url)}
               alt={item.name}
               className="w-full h-80 md:h-[420px] object-cover"
             />

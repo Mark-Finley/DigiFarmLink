@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Sprout, Plus, Trash2, Calendar, ShieldCheck, ShoppingBag, Landmark, Clock, RefreshCw, Phone, MapPin, Tag, Truck, Users } from "lucide-react";
 import { deleteProduceAction, updateOrderStatusAction } from "@/app/actions/produce";
+import { getProduceImageUrl } from "@/utils/images";
 
 export const dynamic = "force-dynamic";
 
@@ -170,7 +171,7 @@ export default async function FarmerDashboard() {
                 {listings.map((item) => (
                   <div key={item.id} className="bg-card border rounded-xl overflow-hidden shadow-sm flex hover:shadow-md transition-shadow relative">
                     <img
-                      src={item.image_url || "https://via.placeholder.com/150"}
+                      src={getProduceImageUrl(item.category, item.image_url)}
                       alt={item.name}
                       className="w-24 object-cover shrink-0"
                     />

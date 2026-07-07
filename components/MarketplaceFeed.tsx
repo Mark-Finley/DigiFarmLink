@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import AddToCartButton from "@/components/AddToCartButton";
 import { Eye, Tag, Star, MapPin, Calendar, ShoppingBag, WifiOff } from "lucide-react";
 import Link from "next/link";
+import { getProduceImageUrl } from "@/utils/images";
 
 interface FeedProps {
   initialProduce: any[];
@@ -110,7 +111,7 @@ export default function MarketplaceFeed({
               {/* Image & Freshness Tag */}
               <div className="relative">
                 <img
-                  src={item.image_url || "https://via.placeholder.com/300?text=Produce"}
+                  src={getProduceImageUrl(item.category, item.image_url)}
                   alt={item.name}
                   className="w-full h-44 object-cover group-hover:scale-[1.02] transition-transform duration-300"
                 />
