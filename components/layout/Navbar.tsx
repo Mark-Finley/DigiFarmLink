@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Sprout, ShoppingBag, LayoutDashboard, LogOut, User, Loader2 } from "lucide-react";
+import { Sprout, ShoppingBag, LayoutDashboard, LogOut, User, Loader2, ShoppingCart } from "lucide-react";
 import { signOutAction } from "@/app/actions/auth";
+import { useCart } from "@/hooks/useCart";
 
 interface AuthUser {
   authenticated: boolean;
@@ -15,6 +16,7 @@ interface AuthUser {
 export default function Navbar() {
   const [user, setUser] = useState<AuthUser>({ authenticated: false });
   const [loading, setLoading] = useState(true);
+  const { cartCount } = useCart();
 
   // Fetch session data client-side from the server proxy endpoint
   useEffect(() => {
@@ -73,6 +75,19 @@ export default function Navbar() {
 
           {/* Right Action buttons */}
           <div className="flex items-center space-x-4">
+            {/* Cart Link */}
+            <Link
+              href="/cart"
+              className="relative p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-xl transition-all"
+              title="View Cart"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {cartCount > 0 && (
+                <span className="absolute top-0.5 right-0.5 bg-primary text-white text-[9px] font-black h-4 w-4 rounded-full flex items-center justify-center border border-card shadow-sm animate-bounce">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
             {loading ? (
               <div className="flex items-center justify-center p-2">
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />

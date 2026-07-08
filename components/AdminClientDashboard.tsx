@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from "react";
 import AdminAnalytics from "@/components/AdminAnalytics";
-import { deleteProduceAdminAction, suspendUserAdminAction, updateUserAdminAction } from "@/app/actions/admin";
-import { ShieldAlert, Users, Sprout, Landmark, ClipboardList, TrendingUp, AlertTriangle, UserCheck, Clock, Trash2, ShieldX, Eye, Edit } from "lucide-react";
+import { deleteProduceAdminAction, suspendUserAdminAction, updateUserAdminAction, deleteUserAdminAction, createUserAdminAction } from "@/app/actions/admin";
+import { ShieldAlert, Users, Sprout, Landmark, ClipboardList, TrendingUp, AlertTriangle, UserCheck, Clock, Trash2, ShieldX, Eye, Edit, UserPlus } from "lucide-react";
 import Link from "next/link";
 
 interface DashboardProps {
@@ -79,6 +79,62 @@ export default function AdminClientDashboard({
         }, 1000);
       }
     });
+  };
+
+  // Create User States
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    email: "",
+    role: "buyer",
+    fullName: "",
+    phoneNumber: "",
+    locationName: "Kumasi Central",
+    password: "",
+  });
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [createSuccess, setCreateSuccess] = useState<boolean>(false);
+
+  const handleStartCreate = () => {
+    setShowCreateModal(true);
+    setCreateForm({
+      email: "",
+      role: "buyer",
+      fullName: "",
+      phoneNumber: "",
+      locationName: "Kumasi Central",
+      password: "",
+    });
+    setCreateError(null);
+    setCreateSuccess(false);
+  };
+
+  const handleSaveCreate = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreateError(null);
+    setCreateSuccess(false);
+
+    startTransition(async () => {
+      const result = await createUserAdminAction(createForm);
+      if (!result.success) {
+        setCreateError(result.error || "Failed to create user.");
+      } else {
+        setCreateSuccess(true);
+        setTimeout(() => {
+          setShowCreateModal(false);
+        }, 1000);
+      }
+    });
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    if (confirm("Are you sure you want to permanently delete this user? This will delete all their profiles and cannot be undone.")) {
+      startTransition(async () => {
+        const result = await deleteUserAdminAction(userId);
+        if (!result.success) {
+          alert(result.error || "Failed to delete user.");
+        }
+      });
+    }
   };
 
   const handleSuspend = (userId: string) => {
@@ -210,9 +266,18 @@ export default function AdminClientDashboard({
           {/* Tab 2: Users Moderation */}
           {activeTab === "users" && (
             <div className="space-y-4">
-              <div>
-                <h2 className="font-extrabold text-lg text-slate-900">User Moderation</h2>
-                <p className="text-xs text-muted-foreground">Manage roles, suspend accounts, and view phone listings.</p>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h2 className="font-extrabold text-lg text-slate-900">User Moderation</h2>
+                  <p className="text-xs text-muted-foreground">Manage roles, suspend accounts, and view phone listings.</p>
+                </div>
+                <button
+                  onClick={handleStartCreate}
+                  className="bg-primary text-primary-foreground font-semibold px-4 py-2 rounded-xl text-xs hover:bg-primary/95 hover:shadow-md transition-all flex items-center gap-1.5"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  <span>Create User</span>
+                </button>
               </div>
               <div className="overflow-x-auto border rounded-xl divide-y">
                 <table className="w-full text-left border-collapse text-xs">
@@ -249,6 +314,13 @@ export default function AdminClientDashboard({
                             >
                               <ShieldX className="h-3 w-3" />
                               <span>Suspend</span>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(u.id)}
+                              className="text-[10px] font-bold text-destructive bg-destructive/10 border border-destructive/20 px-2.5 py-1 rounded-lg hover:bg-destructive/20 transition-colors inline-flex items-center gap-1"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              <span>Delete</span>
                             </button>
                           </div>
                         </td>
@@ -544,6 +616,161 @@ export default function AdminClientDashboard({
                   className="px-4 py-2 bg-primary text-primary-foreground font-semibold rounded-lg text-xs hover:bg-primary/90 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
                 >
                   {isPending ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create User Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card w-full max-w-md rounded-2xl border shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="border-b px-6 py-4 flex items-center justify-between bg-slate-50">
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-sm uppercase tracking-wider">
+                  Create New User
+                </h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  Register a pre-confirmed platform account.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-muted-foreground hover:text-foreground text-lg font-bold"
+              >
+                &times;
+              </button>
+            </div>
+            
+            <form onSubmit={handleSaveCreate} className="p-6 space-y-4">
+              {createError && (
+                <div className="bg-destructive/10 border border-destructive/20 text-destructive text-xs p-3 rounded-lg font-semibold">
+                  {createError}
+                </div>
+              )}
+              {createSuccess && (
+                <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs p-3 rounded-lg font-semibold">
+                  User created successfully!
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600" htmlFor="create-name">
+                  Full Name
+                </label>
+                <input
+                  id="create-name"
+                  type="text"
+                  required
+                  placeholder="e.g. Yao Mensah"
+                  value={createForm.fullName}
+                  onChange={(e) => setCreateForm({ ...createForm, fullName: e.target.value })}
+                  className="w-full border rounded-lg px-3 py-2 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600" htmlFor="create-email">
+                  Email Address
+                </label>
+                <input
+                  id="create-email"
+                  type="email"
+                  required
+                  placeholder="name@farmlink.com"
+                  value={createForm.email}
+                  onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+                  className="w-full border rounded-lg px-3 py-2 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600" htmlFor="create-role">
+                    Role
+                  </label>
+                  <select
+                    id="create-role"
+                    required
+                    value={createForm.role}
+                    onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 capitalize"
+                  >
+                    <option value="farmer">Farmer</option>
+                    <option value="buyer">Buyer</option>
+                    <option value="transporter">Transporter</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600" htmlFor="create-location">
+                    Hub Location
+                  </label>
+                  <select
+                    id="create-location"
+                    required
+                    value={createForm.locationName}
+                    onChange={(e) => setCreateForm({ ...createForm, locationName: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  >
+                    <option value="Kumasi Central">Kumasi Central</option>
+                    <option value="Mampong">Mampong</option>
+                    <option value="Obuasi">Obuasi</option>
+                    <option value="Ejura">Ejura</option>
+                    <option value="Konongo">Konongo</option>
+                    <option value="Bekwai">Bekwai</option>
+                    <option value="Offinso">Offinso</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600" htmlFor="create-phone">
+                  Phone Number
+                </label>
+                <input
+                  id="create-phone"
+                  type="text"
+                  required
+                  placeholder="+233..."
+                  value={createForm.phoneNumber}
+                  onChange={(e) => setCreateForm({ ...createForm, phoneNumber: e.target.value })}
+                  className="w-full border rounded-lg px-3 py-2 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600" htmlFor="create-password">
+                  Password (default: Password1234)
+                </label>
+                <input
+                  id="create-password"
+                  type="password"
+                  placeholder="Password1234"
+                  value={createForm.password}
+                  onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
+                  className="w-full border rounded-lg px-3 py-2 text-xs bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+
+              <div className="border-t pt-4 flex items-center justify-end gap-2 bg-slate-50 -mx-6 -mb-6 p-4">
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 border rounded-lg text-xs font-bold hover:bg-slate-100 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="px-4 py-2 bg-primary text-primary-foreground font-semibold rounded-lg text-xs hover:bg-primary/95 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  {isPending ? "Creating..." : "Create User"}
                 </button>
               </div>
             </form>

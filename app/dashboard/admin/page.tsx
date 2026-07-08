@@ -20,8 +20,14 @@ export default async function AdminDashboardPage() {
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.role !== "admin") {
-    redirect("/login");
+  if (!profile) {
+    // If the profile does not exist in the database, sign the user out to break any middleware redirect loops
+    await supabase.auth.signOut();
+    redirect("/login?error=profile_not_found");
+  }
+
+  if (profile.role !== "admin") {
+    redirect(`/dashboard/${profile.role}`);
   }
 
   // 3. Query all users (to extract role distribution stats and details)

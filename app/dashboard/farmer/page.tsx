@@ -23,8 +23,14 @@ export default async function FarmerDashboard() {
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.role !== "farmer") {
-    redirect("/login");
+  if (!profile) {
+    // If the profile does not exist in the database, sign the user out to break any middleware redirect loops
+    await supabase.auth.signOut();
+    redirect("/login?error=profile_not_found");
+  }
+
+  if (profile.role !== "farmer") {
+    redirect(`/dashboard/${profile.role}`);
   }
 
   // 3. Query active produce listings

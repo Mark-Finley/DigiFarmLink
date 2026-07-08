@@ -20,8 +20,14 @@ export default async function BuyerDashboardPage() {
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.role !== "buyer") {
-    redirect("/login");
+  if (!profile) {
+    // If the profile does not exist in the database, sign the user out to break any middleware redirect loops
+    await supabase.auth.signOut();
+    redirect("/login?error=profile_not_found");
+  }
+
+  if (profile.role !== "buyer") {
+    redirect(`/dashboard/${profile.role}`);
   }
 
   // 3. Query all orders placed by this buyer
