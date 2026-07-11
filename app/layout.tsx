@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import ToastContainer from "@/components/ToastContainer";
@@ -11,6 +11,18 @@ export const metadata: Metadata = {
   description:
     "A direct-to-consumer agricultural marketplace connecting smallholder vegetable farmers in Kumasi/Ashanti region with wholesale buyers and logistics providers.",
   keywords: ["Ghana Agriculture", "DigiFarmLink", "Ashanti Region Farmers", "Vegetable Marketplace", "Kumasi Logistics"],
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "DigiFarmLink",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2E7D32",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

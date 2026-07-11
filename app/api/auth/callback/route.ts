@@ -11,8 +11,7 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     
     if (!error && data?.user) {
-      const role = data.user.user_metadata?.role || "buyer";
-      const redirectUrl = `${origin}/dashboard/${role}`;
+      const redirectUrl = `${origin}/login?verified=true`;
       return NextResponse.redirect(redirectUrl);
     }
   }

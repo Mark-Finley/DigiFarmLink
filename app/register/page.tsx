@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Sprout, Loader2, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { registerAction } from "@/app/actions/auth";
+import { showToast } from "@/components/ToastContainer";
 
 export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +22,9 @@ export default function RegisterPage() {
     const confirmPassword = formData.get("confirmPassword") as string;
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      const errMsg = "Passwords do not match.";
+      showToast(errMsg, "error");
+      setError(errMsg);
       return;
     }
 
@@ -33,7 +36,9 @@ export default function RegisterPage() {
     startTransition(async () => {
       const result = await registerAction(formData);
       if (!result.success) {
-        setError(result.error || "An error occurred during registration.");
+        const errMsg = result.error || "An error occurred during registration.";
+        showToast(errMsg, "error");
+        setError(errMsg);
       } else {
         setSuccess(true);
       }
@@ -92,7 +97,7 @@ export default function RegisterPage() {
               name="role"
               required
               disabled={isPending}
-              className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-background text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
             >
               <option value="farmer">Farmer (Vegetable grower)</option>
               <option value="buyer">Buyer (Commercial retailer/wholesaler)</option>
@@ -111,7 +116,7 @@ export default function RegisterPage() {
               placeholder="e.g. Kwame Mensah"
               required
               disabled={isPending}
-              className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-background text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
             />
           </div>
 
@@ -126,7 +131,7 @@ export default function RegisterPage() {
               placeholder="name@example.com"
               required
               disabled={isPending}
-              className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-background text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
             />
           </div>
 
@@ -134,12 +139,12 @@ export default function RegisterPage() {
             <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" htmlFor="phone">
               Phone Number
             </label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full min-w-0">
               <select
                 name="countryCode"
                 defaultValue="+233"
                 disabled={isPending}
-                className="border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
+                className="border rounded-lg px-3 py-2 text-sm bg-background text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 shrink-0"
               >
                 <option value="+233">🇬🇭 +233</option>
                 <option value="+234">🇳🇬 +234</option>
@@ -157,7 +162,7 @@ export default function RegisterPage() {
                 placeholder="e.g. 241000000"
                 required
                 disabled={isPending}
-                className="flex-1 border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
+                className="flex-1 min-w-0 border rounded-lg px-3 py-2 text-sm bg-background text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
               />
             </div>
           </div>
@@ -171,7 +176,7 @@ export default function RegisterPage() {
               name="location"
               required
               disabled={isPending}
-              className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-background text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
             >
               <option value="Kumasi Central">Kumasi Central (Metropolis)</option>
               <option value="Mampong">Mampong (North)</option>
@@ -195,7 +200,7 @@ export default function RegisterPage() {
                 placeholder="••••••••"
                 required
                 disabled={isPending}
-                className="w-full border rounded-lg pl-3 pr-10 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
+                className="w-full border rounded-lg pl-3 pr-10 py-2 text-sm bg-background text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
               />
               <button
                 type="button"
@@ -225,7 +230,7 @@ export default function RegisterPage() {
                 placeholder="••••••••"
                 required
                 disabled={isPending}
-                className="w-full border rounded-lg pl-3 pr-10 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
+                className="w-full border rounded-lg pl-3 pr-10 py-2 text-sm bg-background text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
               />
               <button
                 type="button"

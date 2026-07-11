@@ -1,14 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { Sprout, Loader2, Eye, EyeOff } from "lucide-react";
 import { loginAction } from "@/app/actions/auth";
+import { showToast } from "@/components/ToastContainer";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("verified") === "true") {
+        showToast("Email successfully verified! Please log in to your account.", "success");
+      }
+    }
+  }, []);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

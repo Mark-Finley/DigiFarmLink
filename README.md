@@ -100,29 +100,29 @@ agricultural logistics in Ghana.
 ## Workflow
 
 ``` text
-Farmer Registration
+   Farmer Registration
         │
-Upload Produce
+    Upload Produce
         │
-Marketplace
+     Marketplace
         │
-Buyer Search & Recommendations
+ Buyer Search & Recommendations
         │
-Order Placement
+     Order Placement
         │
-Farmer Acceptance
+    Farmer Acceptance
         │
-Transport Request
+    Transport Request
         │
-Transport Acceptance
+    Transport Acceptance
         │
-Pickup
+      Pickup
         │
-Live Tracking
+    Live Tracking
         │
-Delivery Confirmation
+ Delivery Confirmation
         │
-Ratings & Analytics
+  Ratings & Analytics
 ```
 
 ## Future Enhancements
@@ -148,7 +148,3 @@ Reviews - Admin dashboard
 ## Team
 
 **Prepared by:** Team Kilimanjaro
-
-## License
-
-Academic MVP project.
