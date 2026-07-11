@@ -18,12 +18,12 @@ const coordinatesMap: Record<string, { lat: number; lon: number }> = {
 const categoryImages: Record<string, string> = {
   Tomatoes: "https://images.unsplash.com/photo-1595855759920-86582396756a?w=400&q=80",
   Pepper: "https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=400&q=80",
-  "Garden Eggs": "https://images.unsplash.com/photo-1528825871115-3581a5387919?w=400&q=80",
-  Okra: "https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=400&q=80",
-  Cabbage: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&q=80",
-  Lettuce: "https://images.unsplash.com/photo-1556801712-76c8eb07bbc9?w=400&q=80",
+  "Garden Eggs": "https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=400&q=80",
+  Okra: "https://images.unsplash.com/photo-1625938146369-adc83368bda7?w=400&q=80",
+  Cabbage: "https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?w=400&q=80",
+  Lettuce: "https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=400&q=80",
   Spinach: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&q=80",
-  Onions: "https://images.unsplash.com/photo-1620188467120-5042ed1eb5da?w=400&q=80",
+  Onions: "https://images.unsplash.com/photo-1618519764620-7403abdbfee9?w=400&q=80",
 };
 
 export async function createProduceAction(formData: FormData) {
@@ -44,6 +44,8 @@ export async function createProduceAction(formData: FormData) {
     const harvestDateStr = formData.get("harvest_date") as string;
     const freshness = formData.get("freshness") as string;
     const customImage = formData.get("image_url") as string;
+    const imageFile = formData.get("image_file") as File | null;
+    const imageBase64 = formData.get("image_base64") as string | null;
 
     if (!name || !category || !priceStr || !qtyStr || !harvestDateStr || !freshness) {
       return { success: false, error: "Please fill in all fields." };
@@ -67,7 +69,58 @@ export async function createProduceAction(formData: FormData) {
       return { success: false, error: "Could not find profile location configuration." };
     }
 
-    const image_url = customImage || categoryImages[category] || "https://via.placeholder.com/300?text=Produce";
+    let image_url = customImage || categoryImages[category] || "https://via.placeholder.com/300?text=Produce";
+    const bucketName = "produce-images";
+
+    if (imageFile && imageFile.size > 0 && typeof imageFile.arrayBuffer === "function") {
+      try {
+        await supabase.storage.createBucket(bucketName, { public: true });
+      } catch (e) {}
+
+      const fileExt = imageFile.name.split('.').pop() || 'jpg';
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const { data: uploadData, error: uploadErr } = await supabase.storage
+        .from(bucketName)
+        .upload(fileName, imageFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (!uploadErr && uploadData) {
+        const { data: { publicUrl } } = supabase.storage
+          .from(bucketName)
+          .getPublicUrl(fileName);
+        image_url = publicUrl;
+      }
+    } else if (imageBase64 && imageBase64.startsWith("data:image/")) {
+      try {
+        await supabase.storage.createBucket(bucketName, { public: true });
+      } catch (e) {}
+
+      const matches = imageBase64.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.*)$/);
+      if (matches && matches.length === 3) {
+        const mimeType = matches[1];
+        const base64Data = matches[2];
+        const buffer = Buffer.from(base64Data, 'base64');
+        const fileExt = mimeType.split('/')[1] || 'jpg';
+        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+
+        const { data: uploadData, error: uploadErr } = await supabase.storage
+          .from(bucketName)
+          .upload(fileName, buffer, {
+            contentType: mimeType,
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (!uploadErr && uploadData) {
+          const { data: { publicUrl } } = supabase.storage
+            .from(bucketName)
+            .getPublicUrl(fileName);
+          image_url = publicUrl;
+        }
+      }
+    }
 
     const { error } = await supabase
       .from("produce")
