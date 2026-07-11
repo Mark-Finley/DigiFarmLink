@@ -6,6 +6,8 @@ const PRECACHE_ASSETS = [
   '/marketplace',
   '/cart',
   '/icon.svg',
+  '/icon-192.png',
+  '/icon-512.png',
   '/manifest.json'
 ];
 
