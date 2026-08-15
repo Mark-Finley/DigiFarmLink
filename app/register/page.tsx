@@ -101,6 +101,7 @@ export default function RegisterPage() {
             >
               <option value="farmer">Farmer (Vegetable grower)</option>
               <option value="buyer">Buyer (Commercial retailer/wholesaler)</option>
+              <option value="admin">Admin</option>
               <option value="transporter">Transport Provider (Logistics hauler)</option>
             </select>
           </div>
